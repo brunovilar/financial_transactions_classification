@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "application"
+version = "0.1.0"
+description = ""
+authors = ["Bruno Vilar"]
+
+[tool.poetry.dependencies]
+python = "~3.8.10"
+jupyterlab = "^3.4.5"
+pandas = "^1.4.3"
+lightgbm = "^3.3.2"
+seaborn = "^0.11.2"
+pydantic = "^1.9.2"
+mlflow = "^1.28.0"
+sklearn = "^0.0"
+pyarrow = "^9.0.0"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "~6.2"
+pynvim = "~0.4.3"
+jedi = "~0.18.1"
+black = "^22.1.0"
+mypy = "~0.931"
+isort = "^5.10.1"
+flake8 = "^4.0.1"
+autoflake = "^1.4"
+respx = "~0.19.2"
+pre-commit = "~2.18.1"
+
+[tool.isort]
+profile="black"
+
+[tool.mypy]
+plugins = [
+  "pydantic.mypy"
+]
+ignore_missing_imports = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
