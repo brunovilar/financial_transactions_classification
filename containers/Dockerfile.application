@@ -1,0 +1,30 @@
+FROM python:3.8-bullseye as application_image
+
+WORKDIR /usr/src
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=off \
+    POETRY_VERSION=1.1.14 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_CACHE_DIR=/usr/src/poetry_cache/ 
+
+RUN groupadd -r user_app && useradd --no-log-init -u 1000 -r -g user_app user_app
+RUN mkdir /var/log/user_app && chown -R user_app:user_app /var/log/user_app
+RUN mkdir /home/user_app && chown -R user_app:user_app /home/user_app
+
+RUN apt-get update -qq && apt-get --no-install-recommends -y -qq install python-dev libsasl2-dev g++ git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --upgrade pip
+RUN pip install "poetry==$POETRY_VERSION"
+
+COPY pyproject.toml poetry.lock ./
+
+RUN poetry install --no-interaction --no-ansi --no-root
+
+COPY . .
+
+RUN poetry install
+
+#USER user_app

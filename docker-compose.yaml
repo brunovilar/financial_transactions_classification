@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  application:
+    build:
+      dockerfile: ./containers/Dockerfile.application
+      context: .
+    image: application_image
+    env_file:
+      - .env
+    ports:
+      - '8888:8888'
+    volumes:
+      - 'mlflow_artifacts:/mlflow'
+      - type: bind
+        source: ./application
+        target: /application
+        bind:
+          propagation: rshared
+    command: jupyter lab --ip 0.0.0.0 --port 8888 --NotebookApp.token="" --notebook-dir="/application" --allow-root
+
+  mlflow-server:
+    restart: always
+    build:
+      dockerfile: ./containers/Dockerfile.mlflow
+      context: .
+    image: mlflow_server_image
+    container_name: mlflow-server
+    ports:
+      - '5002:5002'
+    volumes:
+      - 'mlflow_artifacts:/mlflow'
+    command: mlflow server --backend-store-uri sqlite:////mlflow/storage.db --serve-artifacts --artifacts-destination /mlflow --host 0.0.0.0 --port 5002
+
+volumes:
+  mlflow_artifacts:

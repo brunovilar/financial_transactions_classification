@@ -1,0 +1,8 @@
+FROM python:3.8-bullseye  as mlflow_server_image
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install --no-cache-dir mlflow==1.28
+
+WORKDIR /mlflow
