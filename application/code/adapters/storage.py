@@ -12,4 +12,4 @@ def save_dataset(df: pd.DataFrame, base_path: str, stage: str, file_name: str):
 
 def read_dataset(base_path: str, stage: str, file_name: str) -> pd.DataFrame:
 
-    pd.read_parquet(Path(base_path) / stage / f"{file_name}.parquet")
+    return pd.read_parquet(Path(base_path) / stage / f"{file_name}.parquet")
