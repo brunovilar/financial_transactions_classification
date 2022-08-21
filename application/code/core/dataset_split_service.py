@@ -88,12 +88,12 @@ def describe_datasets(
 
     print(f' - Split Period: {assessment_df["period"].min()}')
 
-    print(f" - Training:")
+    print(" - Training:")
     print(f"\t - Size: {len(training_df)}")
     print(f"\t - Days: {len(training_periods)}")
     print(f"\t - Labels: {len(training_labels)}")
 
-    print(f" - Assessment:")
+    print(" - Assessment:")
     print(f"\t - Size: {len(assessment_periods)}")
     print(f"\t - Days: {len(assessment_periods)}")
     print(f"\t - Labels: {len(assessment_labels)}")
