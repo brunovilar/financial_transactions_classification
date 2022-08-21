@@ -14,6 +14,7 @@ pydantic = "^1.9.2"
 mlflow = "^1.28.0"
 sklearn = "^0.0"
 pyarrow = "^9.0.0"
+category-encoders = "^2.5.0"
 
 
 [tool.poetry.dev-dependencies]
