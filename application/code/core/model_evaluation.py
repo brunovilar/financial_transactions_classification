@@ -1,24 +1,40 @@
-from typing import Dict, List
+from typing import Dict, List, Optional, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from lightgbm.sklearn import LGBMClassifier
 from sklearn import metrics
 
 
 def compute_multiclass_classification_metrics(
-    y_train: np.ndarray, y_preds: np.ndarray, average=None
+    y_train: Union[List[int], np.ndarray],
+    y_preds: Union[List[int], np.ndarray],
+    average_options: Optional[List[str]] = None,
 ) -> Dict:
 
-    return {
-        "precision": metrics.precision_score(
-            y_train, y_preds, average=average, zero_division=0
-        ),
-        "recall": metrics.recall_score(
-            y_train, y_preds, average=average, zero_division=0
-        ),
-        "f1": metrics.f1_score(y_train, y_preds, average=average, zero_division=0),
-    }
+    average_options = average_options or ["macro", "micro", "weighted"]
+
+    computed_metrics = dict()
+
+    for average in average_options:
+
+        computed_metrics.update(
+            {
+                f"{average}_precision": metrics.precision_score(
+                    y_train, y_preds, average=average, zero_division=0
+                ),
+                f"{average}_recall": metrics.recall_score(
+                    y_train, y_preds, average=average, zero_division=0
+                ),
+                f"{average}_f1": metrics.f1_score(
+                    y_train, y_preds, average=average, zero_division=0
+                ),
+            }
+        )
+
+    return computed_metrics
 
 
 def generate_feature_importance_report(
@@ -36,3 +52,38 @@ def generate_feature_importance_report(
             ).apply(lambda i: f"{i:.2f}%")
         )
     )
+
+
+def generate_confusion_matrix(
+    y: List[int], pred: List[int], labels: List[str]
+) -> pd.DataFrame:
+
+    return pd.DataFrame(metrics.confusion_matrix(y, pred), columns=labels).rename(
+        index={ix: label for ix, label in enumerate(labels)}
+    )
+
+
+def plot_folds_metrics(df: pd.DataFrame):
+
+    columns = [
+        c
+        for c in df.columns
+        if (c.endswith("precision") or c.endswith("recall") or c.endswith("f1"))
+    ]
+
+    view_df = (
+        df[columns]
+        .melt(id_vars=[], value_vars=columns)
+        .assign(average=lambda f: f["variable"].str.split("_").str[0])
+        .assign(metric=lambda f: f["variable"].str.split("_").str[1])
+    )
+
+    plt.figure(figsize=(15, 5))
+    ax = sns.boxplot(x="variable", y="value", hue="average", data=view_df)
+    ax.set_title(
+        f"Metrics Distribution by Average Type (Folds={len(df)})",
+        fontdict={"fontsize": 20},
+    )
+    ax.set_xlabel("Column")
+    ax.set_ylabel("Column Value")
+    plt.show()

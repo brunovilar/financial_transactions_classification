@@ -11,6 +11,7 @@ from application.code.core.feature_engineering import (
     clean_column_names,
     engineer_features,
     format_string_columns,
+    standardize_labels,
     transform_gender,
 )
 
@@ -22,7 +23,9 @@ def vectorize_folds(
     high_cardinality_categorical_columns: List[str],
     binary_columns: List[str],
     target_column: str,
-) -> List[Tuple[Tuple[np.ndarray, List[int]], Tuple[np.ndarray, List[int]]]]:
+) -> List[
+    Tuple[Tuple[np.ndarray, List[int]], Tuple[np.ndarray, List[int]], List[str]]
+]:  # noqa
 
     vectorized_folds = []
 
@@ -43,11 +46,13 @@ def vectorize_folds(
         # fmt: on
 
         # Labels are combined to avoid uknown label issues during experiments
-        # For production, we should raise an exception
-        labels = list(
-            set(
-                clean_training_df[target_column].tolist()
-                + clean_assessment_df[target_column].tolist()  # noqa
+        # For production, it should raise an exception
+        labels = sorted(
+            list(
+                set(
+                    clean_training_df[target_column].tolist()
+                    + clean_assessment_df[target_column].tolist()  # noqa
+                )
             )
         )
 
@@ -70,7 +75,7 @@ def vectorize_folds(
         assessment_X, assessment_y = generate_fn(df=clean_assessment_df)
 
         vectorized_folds.append(
-            ((training_X, training_y), (assessment_X, assessment_y))
+            ((training_X, training_y), (assessment_X, assessment_y), labels)
         )
 
     return vectorized_folds
@@ -113,6 +118,7 @@ def clean_data(df: pd.DataFrame, categorical_columns: List[str]) -> pd.DataFrame
         .pipe(clean_column_names)
         .pipe(change_column_types)
         .pipe(format_string_columns, columns=categorical_columns)
+        .pipe(standardize_labels)
     )
 
 

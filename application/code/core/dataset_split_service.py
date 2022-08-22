@@ -25,7 +25,7 @@ def compute_cumulative_records_by_date(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def generate_folds(
-    df: pd.DataFrame, n_folds: int, min_validation_size: int
+    df: pd.DataFrame, n_folds: int, min_validation_size: int, seed: int = None
 ) -> List[Tuple[pd.DataFrame, pd.DataFrame]]:
 
     split_period = str(datetime.today().date())
@@ -48,7 +48,12 @@ def generate_folds(
         fold_valid_df = last_dataset.loc[lambda f: f["period"] >= split_period]
         last_dataset = fold_train_df
 
-        folds.append((fold_train_df, fold_valid_df))
+        folds.append(
+            (
+                fold_train_df.sample(frac=1.0, random_state=seed),
+                fold_valid_df,
+            )
+        )
 
     return folds
 

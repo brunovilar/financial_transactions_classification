@@ -14,7 +14,8 @@ class MLFlowConfiguration(BaseModel):
 class ModelTrainingConfiguration(BaseModel):
     folds: int
     min_validation_size: int
-    random_seed: int
+    model_seed: int
+    data_seed: int
 
 
 class Environment(BaseSettings):

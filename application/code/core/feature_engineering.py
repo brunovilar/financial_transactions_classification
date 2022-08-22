@@ -4,6 +4,24 @@ from typing import List
 import numpy as np
 import pandas as pd
 
+LABELS_MAP = {
+    "servi\x82o": "serviço",
+    "farmacias": "farmácias",
+    "m.o.t.o.": "compra online",
+    "loja de depart": "loja de departamento",
+    "vestuario": "vestuário",
+    "moveis e decor": "móveis e decoração",
+    "hosp e clinica": "hospitais e clínicas",
+    "mat construcao": "materiais construção",
+    "posto de gas": "posto de gás",
+    "cia aereas": "companhia aérea",
+    "trans financ": "transação financeira",
+    "hoteis": "hotéis",
+    "auto pe\x82as": "auto-peças",
+    "agencia de tur": "agência turismo",
+    "alug de carros": "aluguel carro",
+}
+
 
 def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
 
@@ -129,25 +147,9 @@ def transform_gender(df: pd.DataFrame) -> pd.DataFrame:
 
 def standardize_labels(df: pd.DataFrame) -> pd.DataFrame:
 
-    labels_map = {
-        "servi\x82o": "serviço",
-        "farmacias": "farmácias",
-        "m.o.t.o.": "compra online",
-        "loja de depart": "loja de departamento",
-        "vestuario": "vestuário",
-        "moveis e decor": "móveis e decoração",
-        "hosp e clinica": "hospitais e clínicas",
-        "mat construcao": "materiais construção",
-        "posto de gas": "posto de gás",
-        "cia aereas": "companhia aérea",
-        "trans financ": "transação financeira",
-        "hoteis": "hotéis",
-        "auto pe\x82as": "auto-peças",
-        "agencia de tur": "agência turismo",
-        "alug de carros": "aluguel carro",
-    }
-
-    fixed_labels = df.grupo_estabelecimento.apply(lambda ge: labels_map.get(ge, ge))
+    fixed_labels = df.grupo_estabelecimento.str.strip().apply(
+        lambda ge: LABELS_MAP.get(ge, ge)
+    )
 
     return df.assign(grupo_estabelecimento=fixed_labels)
 
