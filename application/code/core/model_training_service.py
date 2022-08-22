@@ -21,7 +21,7 @@ def train_model(
     features_names: List[str],
     experiment_run_name: str,
     extra_artifacts: List[Tuple[pd.DataFrame, str, str]],
-) -> MLFlowRun:
+) -> Tuple[MLFlowRun, Any]:
 
     with mlflow.start_run(run_name=experiment_run_name) as mlflow_run:
         model = algorithm_class(**model_params)
@@ -29,9 +29,7 @@ def train_model(
 
         # Training metrics
         preds = model.predict(X_training)
-        training_metrics = compute_multiclass_classification_metrics(
-            y_training, preds.round()
-        )
+        training_metrics = compute_multiclass_classification_metrics(y_training, preds)
 
         # Log Parameters
         mlflow.log_params(model_params)
@@ -63,4 +61,4 @@ def train_model(
         for artifact_df, artifact_folder, artifact_name in extra_artifacts:
             log_dataframe_artifact(artifact_df, artifact_folder, artifact_name)
 
-    return mlflow_run
+    return mlflow_run, model

@@ -41,9 +41,11 @@ def generate_feature_importance_report(
     model: LGBMClassifier, columns: List[str]
 ) -> pd.DataFrame:
 
+    # fmt: off
     return (
         pd.DataFrame(
-            {"feature": columns, "absolute_importance": model.feature_importances_}
+            {"feature": columns,
+             "absolute_importance": model.feature_importances_}
         )
         .sort_values(by="absolute_importance", ascending=False)
         .assign(
@@ -52,15 +54,20 @@ def generate_feature_importance_report(
             ).apply(lambda i: f"{i:.2f}%")
         )
     )
+    # fmt: on
 
 
 def generate_confusion_matrix(
     y: List[int], pred: List[int], labels: List[str]
 ) -> pd.DataFrame:
 
-    return pd.DataFrame(metrics.confusion_matrix(y, pred), columns=labels).rename(
-        index={ix: label for ix, label in enumerate(labels)}
+    # fmt: off
+    return (
+        pd
+        .DataFrame(metrics.confusion_matrix(y, pred), columns=labels)
+        .rename(index={ix: label for ix, label in enumerate(labels)})
     )
+    # fmt: on
 
 
 def plot_folds_metrics(df: pd.DataFrame):
