@@ -37,18 +37,18 @@ class FinancialClassificationModel(PythonModel):
             binary_columns,
         )
 
-    def predict(self, context: Any, content: DataFrame) -> List[Tuple[str, int]]:
+    def predict(self, data: DataFrame) -> List[Tuple[str, int]]:
 
         # fmt: off
-        clean_content = (
-            content
+        processed_data = (
+            data
             .pipe(clean_data, self.categorical_columns)
             .pipe(engineer_features)
         )
         # fmt: on
 
         X = generate_features(
-            clean_content,
+            processed_data,
             columns_selection=self.columns_selection,
             binary_columns=self.binary_columns,
             categorical_encoder=self.categorical_encoder,

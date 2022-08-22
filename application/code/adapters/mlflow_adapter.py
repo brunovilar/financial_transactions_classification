@@ -4,7 +4,8 @@ from pathlib import Path
 import mlflow
 import pandas as pd
 from mlflow.client import MlflowClient
-from mlflow.pyfunc import PythonModel
+from mlflow.exceptions import RestException
+from mlflow.pyfunc import PyFuncModel, PythonModel
 from mlflow.store.artifact.runs_artifact_repo import RunsArtifactRepository
 from mlflow.tracking.fluent import ActiveRun as MLFlowRun
 
@@ -44,7 +45,9 @@ def register_model(model: PythonModel, run: MLFlowRun, model_name: str) -> int:
 
     client = MlflowClient()
 
-    if not client.get_registered_model(model_name):
+    try:
+        client.get_registered_model(model_name)
+    except RestException:
         client.create_registered_model(model_name)
 
     runs_uri = f"runs:/{run.info.run_id}/model_name"
@@ -61,3 +64,9 @@ def publish_model(model_name: str, model_version: int, stage: str):
     client.transition_model_version_stage(
         name=model_name, version=model_version, stage=stage
     )
+
+
+def get_published_model(model_name: str, stage: str) -> PyFuncModel:
+
+    model_uri = f"models:/{model_name}/{stage}"
+    return mlflow.pyfunc.load_model(model_uri=model_uri)
