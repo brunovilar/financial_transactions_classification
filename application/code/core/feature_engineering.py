@@ -4,6 +4,24 @@ from typing import List
 import numpy as np
 import pandas as pd
 
+LABELS_MAP = {
+    "servi\x82o": "serviço",
+    "farmacias": "farmácias",
+    "m.o.t.o.": "compra online",
+    "loja de depart": "loja de departamento",
+    "vestuario": "vestuário",
+    "moveis e decor": "móveis e decoração",
+    "hosp e clinica": "hospitais e clínicas",
+    "mat construcao": "materiais construção",
+    "posto de gas": "posto de gás",
+    "cia aereas": "companhia aérea",
+    "trans financ": "transação financeira",
+    "hoteis": "hotéis",
+    "auto pe\x82as": "auto-peças",
+    "agencia de tur": "agência turismo",
+    "alug de carros": "aluguel carro",
+}
+
 
 def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
 
@@ -78,14 +96,14 @@ def compute_travelling_features(df: pd.DataFrame) -> pd.DataFrame:
     # fmt: off
     return (
         df.assign(
-            is_a_different_city=lambda f:
+            cidade_diferente=lambda f:
                 f["cidade"] != f["cidade_estabelecimento"]
         )
         .assign(
-            is_a_different_state=lambda f:
+            estado_diferente=lambda f:
                 f["estado"] != f["estado_estabelecimento"]
         )
-        .assign(is_a_different_country=lambda f:
+        .assign(pais_diferente=lambda f:
                 f["pais_estabelecimento"] != "br")
     )
     # fmt: on
@@ -99,29 +117,41 @@ def compute_date_features(df: pd.DataFrame) -> pd.DataFrame:
             period_date=lambda f:
                 f["period"].apply(lambda p: datetime.fromisoformat(p))
         )
-        .assign(weekday=lambda f: f["period_date"].dt.dayofweek)
-        .assign(monthday=lambda f: f["period_date"].dt.day)
-        .assign(month=lambda f: f["period_date"].dt.month)
+        .assign(dia_semana=lambda f: f["period_date"].dt.dayofweek)
+        .assign(dia_mes=lambda f: f["period_date"].dt.day)
+        .assign(mes=lambda f: f["period_date"].dt.month)
+        .assign(dia_util=lambda f: ~f["dia_semana"].isin([5, 6]))
+        .drop(columns=['period_date'])
     )
     # fmt: on
 
 
 def compute_relative_value(df: pd.DataFrame) -> pd.DataFrame:
 
+    total_relative_value = df["valor"] / df["limite_total"]
+    available_relative_value = df["valor"] / df["limite_disp"]
+
     # fmt: off
     return (
         df
-        .assign(total_relative_value=lambda f:
-                f["valor"] / f["limite_total"])
-        .assign(available_relative_value=lambda f:
-                f["valor"] / f["limite_disp"])
+        .assign(valor_relativo_total=total_relative_value)
+        .assign(valor_relativo_disponivel=available_relative_value)
     )
-    # fmt: off
+    # fmt: on
 
 
 def transform_gender(df: pd.DataFrame) -> pd.DataFrame:
 
-    return df.assign(genero=lambda f: f["sexo"] == "f")
+    return df.assign(sexo=lambda f: f["sexo"] == "f")
+
+
+def standardize_labels(df: pd.DataFrame) -> pd.DataFrame:
+
+    fixed_labels = df.grupo_estabelecimento.str.strip().apply(
+        lambda ge: LABELS_MAP.get(ge, ge)
+    )
+
+    return df.assign(grupo_estabelecimento=fixed_labels)
 
 
 def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
