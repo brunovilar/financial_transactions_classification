@@ -133,8 +133,7 @@ def vectorize_dataset(
 def clean_data(df: DataFrame, categorical_columns: List[str]) -> DataFrame:
 
     return (
-        df.drop_duplicates()
-        .pipe(clean_column_names)
+        df.pipe(clean_column_names)
         .pipe(change_column_types)
         .pipe(format_string_columns, columns=categorical_columns)
         .pipe(standardize_labels)
