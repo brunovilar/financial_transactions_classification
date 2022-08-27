@@ -145,11 +145,16 @@ def transform_gender(df: pd.DataFrame) -> pd.DataFrame:
     return df.assign(sexo=lambda f: f["sexo"] == "f")
 
 
+def standardize_label(label: str) -> str:
+
+    clean_label = label.strip().lower()
+
+    return LABELS_MAP.get(clean_label, clean_label)
+
+
 def standardize_labels(df: pd.DataFrame) -> pd.DataFrame:
 
-    fixed_labels = df.grupo_estabelecimento.str.strip().apply(
-        lambda ge: LABELS_MAP.get(ge, ge)
-    )
+    fixed_labels = df.grupo_estabelecimento.apply(standardize_label)
 
     return df.assign(grupo_estabelecimento=fixed_labels)
 

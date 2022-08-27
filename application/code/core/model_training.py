@@ -1,3 +1,4 @@
+import copy
 from functools import partial
 from typing import Dict, List, Tuple
 
@@ -69,11 +70,7 @@ def vectorize_folds(
             )
         )
 
-        # fmt: off
-        features_selection = [c
-                              for c in columns_selection
-                              if c != target_column]
-        # fmt: on
+        features_selection = [c for c in columns_selection if c != target_column]
 
         label_encoder, categorical_encoder = generate_encoders(
             clean_training_df[features_selection],
@@ -133,8 +130,7 @@ def vectorize_dataset(
 def clean_data(df: DataFrame, categorical_columns: List[str]) -> DataFrame:
 
     return (
-        df.drop_duplicates()
-        .pipe(clean_column_names)
+        df.pipe(clean_column_names)
         .pipe(change_column_types)
         .pipe(format_string_columns, columns=categorical_columns)
         .pipe(standardize_labels)
@@ -219,3 +215,20 @@ def compute_weights(y: List[int]) -> Dict[int, float]:
     iterator = value_counts_frame[["label", "weight"]].itertuples(index=False)
 
     return {item.label: item.weight for item in iterator}
+
+
+def adjust_weights(
+    class_weights: Dict[int, float],
+    labels: List[str],
+    adjustments: Dict[int, float] = None,
+) -> Dict[int, float]:
+
+    adjustments = adjustments or dict()
+    adjusted_weights = copy.deepcopy(class_weights)
+
+    for key, value in adjustments.items():
+
+        encoded_label = labels.index(key)
+        adjusted_weights[encoded_label] = adjusted_weights[encoded_label] * value
+
+    return adjusted_weights

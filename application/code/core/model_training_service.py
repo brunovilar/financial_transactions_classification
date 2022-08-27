@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import mlflow
 import numpy as np
@@ -8,9 +8,10 @@ from mlflow.tracking.fluent import ActiveRun as MLFlowRun
 from application.code.adapters.mlflow_adapter import log_dataframe_artifact
 from application.code.core.model_evaluation import (
     compute_multiclass_classification_metrics,
+    generate_classification_report,
     generate_feature_importance_report,
 )
-from application.code.core.model_training import compute_weights
+from application.code.core.model_training import adjust_weights, compute_weights
 
 
 def train_model(
@@ -19,8 +20,10 @@ def train_model(
     X_training: np.ndarray,
     y_training: List[int],
     features_names: List[str],
+    labels: List[str],
     experiment_run_name: str,
     extra_artifacts: List[Tuple[pd.DataFrame, str, str]],
+    weights_adjustments: Optional[Dict[int, float]] = None,
 ) -> Tuple[MLFlowRun, Any]:
 
     with mlflow.start_run(run_name=experiment_run_name) as mlflow_run:
@@ -32,12 +35,12 @@ def train_model(
         training_metrics = compute_multiclass_classification_metrics(y_training, preds)
 
         # Log Parameters
-        mlflow.log_params(model_params)
         class_weights = compute_weights(y_training)
-
+        class_weights = adjust_weights(class_weights, labels, weights_adjustments)
         model_params.update(
             {"class_weight": class_weights, "num_class": len(set(y_training))}
         )
+        mlflow.log_params(model_params)
 
         # Log Main Artifacts
         class_weights_df = pd.DataFrame(
@@ -55,6 +58,13 @@ def train_model(
         )
         log_dataframe_artifact(
             features_importance_df, "main model", "features importance"
+        )
+
+        classfification_report_df = generate_classification_report(
+            y_training, preds, labels
+        )
+        log_dataframe_artifact(
+            classfification_report_df, "main model", "training_classification report"
         )
 
         # Log Extra Artifacts

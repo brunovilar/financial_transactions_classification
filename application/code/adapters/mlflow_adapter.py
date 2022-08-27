@@ -1,5 +1,6 @@
 import tempfile
 from pathlib import Path
+from typing import Dict
 
 import mlflow
 import pandas as pd
@@ -8,6 +9,10 @@ from mlflow.exceptions import RestException
 from mlflow.pyfunc import PyFuncModel, PythonModel
 from mlflow.store.artifact.runs_artifact_repo import RunsArtifactRepository
 from mlflow.tracking.fluent import ActiveRun as MLFlowRun
+
+from application.code.core.financial_classification_model import (
+    FinancialClassificationModel,
+)
 
 
 def log_dataframe_artifact(
@@ -38,10 +43,13 @@ def get_mlflow_artifact_content(run_id: str, artifact_folder_name: str) -> dict:
     return artifacts
 
 
-def register_model(model: PythonModel, run: MLFlowRun, model_name: str) -> int:
+def log_model(model: PythonModel, run: MLFlowRun, model_name: str):
 
     mlflow.start_run(run.info.run_id)
     mlflow.sklearn.log_model(model, model_name)
+
+
+def register_model(run: MLFlowRun, model_name: str) -> int:
 
     client = MlflowClient()
 
@@ -50,7 +58,7 @@ def register_model(model: PythonModel, run: MLFlowRun, model_name: str) -> int:
     except RestException:
         client.create_registered_model(model_name)
 
-    runs_uri = f"runs:/{run.info.run_id}/model_name"
+    runs_uri = f"runs:/{run.info.run_id}/{model_name}"
     model_src = RunsArtifactRepository.get_underlying_uri(runs_uri)
 
     model_version = client.create_model_version(model_name, model_src, run.info.run_id)
@@ -70,3 +78,23 @@ def get_published_model(model_name: str, stage: str) -> PyFuncModel:
 
     model_uri = f"models:/{model_name}/{stage}"
     return mlflow.pyfunc.load_model(model_uri=model_uri)
+
+
+def extract_internal_model(mlflow_model: PyFuncModel) -> FinancialClassificationModel:
+
+    return mlflow_model._model_impl
+
+
+def set_active_run(run_id: str):
+
+    mlflow.start_run(run_id=run_id)
+
+
+def end_run():
+
+    mlflow.end_run()
+
+
+def log_metrics(metrics: Dict[str, float]):
+
+    mlflow.log_metrics(metrics)
