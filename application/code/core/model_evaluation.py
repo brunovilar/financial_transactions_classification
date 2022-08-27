@@ -5,12 +5,17 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from lightgbm.sklearn import LGBMClassifier
+from numpy import ndarray
+from pandas import DataFrame
 from sklearn import metrics
+from sklearn.metrics import classification_report
+
+from application.code.core.feature_engineering import standardize_labels
 
 
 def compute_multiclass_classification_metrics(
-    y_train: Union[List[int], np.ndarray],
-    y_preds: Union[List[int], np.ndarray],
+    y_train: Union[List[int], ndarray],
+    y_preds: Union[List[int], ndarray],
     average_options: Optional[List[str]] = None,
 ) -> Dict:
 
@@ -39,13 +44,11 @@ def compute_multiclass_classification_metrics(
 
 def generate_feature_importance_report(
     model: LGBMClassifier, columns: List[str]
-) -> pd.DataFrame:
+) -> DataFrame:
 
-    # fmt: off
     return (
         pd.DataFrame(
-            {"feature": columns,
-             "absolute_importance": model.feature_importances_}
+            {"feature": columns, "absolute_importance": model.feature_importances_}
         )
         .sort_values(by="absolute_importance", ascending=False)
         .assign(
@@ -54,23 +57,50 @@ def generate_feature_importance_report(
             ).apply(lambda i: f"{i:.2f}%")
         )
     )
-    # fmt: on
 
 
-def generate_confusion_matrix(
+def generate_confusion_matrix_report(
     y: List[int], pred: List[int], labels: List[str]
-) -> pd.DataFrame:
+) -> DataFrame:
 
-    # fmt: off
+    encoded_labels = set(y) | set(pred)
+    known_labels = {
+        ix: label for ix, label in enumerate(labels) if ix in encoded_labels
+    }
+
+    cm = metrics.confusion_matrix(y, pred)
+    return pd.DataFrame(cm, columns=known_labels.values()).rename(index=known_labels)
+
+
+def generate_classification_report(
+    y: ndarray, pred: ndarray, labels: List[str]
+) -> DataFrame:
+
+    columns_to_rename = {str(ix): name for ix, name in enumerate(labels)}
+    columns_to_drop = ["accuracy", "macro avg", "weighted avg"]
+
+    report = classification_report(y, pred, output_dict=True, zero_division=0)
+
     return (
-        pd
-        .DataFrame(metrics.confusion_matrix(y, pred), columns=labels)
-        .rename(index={ix: label for ix, label in enumerate(labels)})
+        pd.DataFrame(report)
+        .rename(columns=columns_to_rename)
+        .drop(columns=columns_to_drop)
+        .T
     )
-    # fmt: on
 
 
-def plot_folds_metrics(df: pd.DataFrame):
+def generate_labels_support(df: DataFrame) -> DataFrame:
+
+    return (
+        df.value_counts("grupo_estabelecimento")
+        .to_frame()
+        .reset_index()
+        .rename(columns={0: "training_support"})
+        .pipe(standardize_labels)
+    )
+
+
+def plot_folds_metrics(df: DataFrame):
 
     columns = [
         c

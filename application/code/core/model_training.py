@@ -1,5 +1,6 @@
+import copy
 from functools import partial
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from category_encoders import CountEncoder
 from numpy import ndarray
@@ -69,11 +70,7 @@ def vectorize_folds(
             )
         )
 
-        # fmt: off
-        features_selection = [c
-                              for c in columns_selection
-                              if c != target_column]
-        # fmt: on
+        features_selection = [c for c in columns_selection if c != target_column]
 
         label_encoder, categorical_encoder = generate_encoders(
             clean_training_df[features_selection],
@@ -218,3 +215,20 @@ def compute_weights(y: List[int]) -> Dict[int, float]:
     iterator = value_counts_frame[["label", "weight"]].itertuples(index=False)
 
     return {item.label: item.weight for item in iterator}
+
+
+def adjust_weights(
+    class_weights: Dict[int, float],
+    labels: List[str],
+    adjustments: Optional[Dict[int, float]],
+) -> Dict[int, float]:
+
+    adjustments: Dict[int, float] = adjustments or dict()
+    adjusted_weights = copy.deepcopy(class_weights)
+
+    for key, value in adjustments.items():
+
+        encoded_label = labels.index(key)
+        adjusted_weights[encoded_label] = adjusted_weights[encoded_label] * value
+
+    return adjusted_weights
