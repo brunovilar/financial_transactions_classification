@@ -10,6 +10,7 @@ class MLFlowConfiguration(BaseModel):
     uri: str
     experiment_name: str
     base_model_name: str
+    modified_model_name: str
 
 
 class ModelTrainingConfiguration(BaseModel):

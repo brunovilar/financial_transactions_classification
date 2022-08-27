@@ -1,6 +1,6 @@
 import copy
 from functools import partial
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from category_encoders import CountEncoder
 from numpy import ndarray
@@ -220,10 +220,10 @@ def compute_weights(y: List[int]) -> Dict[int, float]:
 def adjust_weights(
     class_weights: Dict[int, float],
     labels: List[str],
-    adjustments: Optional[Dict[int, float]],
+    adjustments: Dict[int, float] = None,
 ) -> Dict[int, float]:
 
-    adjustments: Dict[int, float] = adjustments or dict()
+    adjustments = adjustments or dict()
     adjusted_weights = copy.deepcopy(class_weights)
 
     for key, value in adjustments.items():

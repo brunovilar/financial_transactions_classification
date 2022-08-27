@@ -1,5 +1,6 @@
 import tempfile
 from pathlib import Path
+from typing import Dict
 
 import mlflow
 import pandas as pd
@@ -82,3 +83,18 @@ def get_published_model(model_name: str, stage: str) -> PyFuncModel:
 def extract_internal_model(mlflow_model: PyFuncModel) -> FinancialClassificationModel:
 
     return mlflow_model._model_impl
+
+
+def set_active_run(run_id: str):
+
+    mlflow.start_run(run_id=run_id)
+
+
+def end_run():
+
+    mlflow.end_run()
+
+
+def log_metrics(metrics: Dict[str, float]):
+
+    mlflow.log_metrics(metrics)

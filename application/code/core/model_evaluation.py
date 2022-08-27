@@ -73,7 +73,7 @@ def generate_confusion_matrix_report(
 
 
 def generate_classification_report(
-    y: ndarray, pred: ndarray, labels: List[str]
+    y: Union[List[int], ndarray], pred: Union[List[float], ndarray], labels: List[str]
 ) -> DataFrame:
 
     columns_to_rename = {str(ix): name for ix, name in enumerate(labels)}
