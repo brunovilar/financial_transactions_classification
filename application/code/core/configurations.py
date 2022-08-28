@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import BaseModel, BaseSettings
 
 
@@ -20,10 +22,17 @@ class ModelTrainingConfiguration(BaseModel):
     data_seed: int
 
 
+class PlotsConfiguration(BaseModel):
+    large_fig_size: List[int]
+    small_fig_size: List[int]
+    font_size: int
+
+
 class Environment(BaseSettings):
     datasets: DatasetsConfiguration
     mlflow: MLFlowConfiguration
     model_training: ModelTrainingConfiguration
+    plots: PlotsConfiguration
 
 
 configs = Environment()
