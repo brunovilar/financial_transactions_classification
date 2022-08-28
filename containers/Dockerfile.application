@@ -26,5 +26,3 @@ RUN poetry install --no-interaction --no-ansi --no-root
 COPY . .
 
 RUN poetry install
-
-#USER user_app

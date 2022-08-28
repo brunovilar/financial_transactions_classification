@@ -59,8 +59,8 @@ def vectorize_folds(
         )
         # fmt: on
 
-        # Labels are combined to avoid uknown label issues during experiments
-        # For production, it should raise an exception
+        # Labels are combined to know which labels are unknown by the model
+        # These labels, however, are not leacked to the model. There is no data about it.
         labels = sorted(
             list(
                 set(
